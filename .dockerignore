@@ -1,0 +1,33 @@
+# Node modules and dependencies
+node_modules
+npm-debug.log
+
+# Next.js build output
+.next
+out
+
+# Git files
+.git
+.gitignore
+
+# Development files
+README.md
+.vscode
+.idea
+
+# Environment variables
+.env
+.env.*
+!.env.production.template
+
+# Docker files (not needed inside the container)
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Local development files
+*.log
+.DS_Store
+
+# Documentation and other non-essential files
+docs-*

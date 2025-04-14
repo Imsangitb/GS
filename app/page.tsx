@@ -1,103 +1,91 @@
-import Image from "next/image";
+import { FC } from 'react';
+import HeroSection from './components/HeroSection';
+import CategorySection from './components/CategorySection';
+import FeaturedProducts from './components/FeaturedProducts';
+import NewsletterSection from './components/NewsletterSection';
 
-export default function Home() {
+// Sample data
+const categories = [
+  { 
+    id: 1, 
+    name: "Accessories", 
+    image: "/categories/accessories.jpg",
+    gradient: "from-blue-100 to-blue-300"
+  },
+  { 
+    id: 2, 
+    name: "Clothing", 
+    image: "/categories/clothing.jpg",
+    gradient: "from-red-100 to-red-300"
+  },
+  { 
+    id: 3, 
+    name: "Home", 
+    image: "/categories/home.jpg",
+    gradient: "from-green-100 to-green-300"
+  },
+];
+
+const featuredProducts = [
+  { 
+    id: 1, 
+    name: "Premium Watch", 
+    price: 129.99, 
+    image: "/products/watch.jpg",
+    isSale: true,
+    originalPrice: 159.99 
+  },
+  { 
+    id: 2, 
+    name: "Leather Wallet", 
+    price: 49.99, 
+    image: "/products/wallet.jpg" 
+  },
+  { 
+    id: 3, 
+    name: "Minimalist Backpack", 
+    price: 89.99, 
+    image: "/products/backpack.jpg" 
+  },
+  { 
+    id: 4, 
+    name: "Scented Candle", 
+    price: 29.99, 
+    image: "/products/candle.jpg",
+    isSale: true,
+    originalPrice: 39.99 
+  },
+];
+
+const HomePage: FC = () => {
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+    <>
+      <HeroSection 
+        title="Welcome to GLOSSIFY STORE"
+        subtitle="Discover our curated collection of premium products designed to elevate your lifestyle."
+        ctaText="Shop Now"
+        ctaLink="/shop"
+      />
+      
+      <CategorySection 
+        title="Featured Categories"
+        categories={categories}
+      />
+      
+      <FeaturedProducts 
+        title="Featured Products"
+        products={featuredProducts}
+      />
+      
+      <NewsletterSection 
+        title="Stay Updated"
+        subtitle="Subscribe to our newsletter for new product announcements, style guides, and exclusive offers."
+        buttonText="Subscribe"
+        placeholderText="Enter your email"
+        promoText="Get 10% off your first order when you subscribe!"
+      />
+    </>
   );
-}
+};
+
+export default HomePage;
