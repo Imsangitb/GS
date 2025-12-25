@@ -10,6 +10,12 @@ const nextConfig = {
       },
     ],
   },
+  // Add Docker-specific configuration
+  output: 'standalone',
+  // Disable telemetry during build
+  env: {
+    NEXT_TELEMETRY_DISABLED: '1',
+  },
 };
 
 module.exports = nextConfig;

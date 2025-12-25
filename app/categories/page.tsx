@@ -8,7 +8,7 @@ const categories = [
     id: 1,
     name: "Accessories",
     description: "Elevate your style with our premium tech-inspired accessories",
-    image: "/categories/accessories.jpg", 
+    image: "/images/scarf-1.jpg", 
     itemCount: 12,
     featured: true,
     slug: "accessories"
@@ -17,7 +17,7 @@ const categories = [
     id: 2,
     name: "Clothing",
     description: "Sustainable, comfortable apparel for the modern developer",
-    image: "/categories/clothing.jpg",
+    image: "/images/tshirt-1.jpg",
     itemCount: 18,
     featured: true,
     slug: "clothing"
@@ -26,16 +26,15 @@ const categories = [
     id: 3,
     name: "Home",
     description: "Transform your space with our minimalist home decor collection",
-    image: "/categories/home.jpg",
+    image: "/images/lamp-1.jpg",
     itemCount: 9,
     featured: true,
     slug: "home"
-  },
-  {
+  },  {
     id: 4,
     name: "Gadgets",
     description: "Innovative tech accessories for your everyday needs",
-    image: "/categories/gadgets.jpg", 
+    image: "/images/notebook-1.jpg", 
     itemCount: 15,
     featured: false,
     slug: "gadgets"
@@ -44,7 +43,7 @@ const categories = [
     id: 5,
     name: "Footwear",
     description: "Comfortable and stylish footwear for developers on the move",
-    image: "/categories/footwear.jpg",
+    image: "/images/wallet-1.jpg",
     itemCount: 7,
     featured: false,
     slug: "footwear"
@@ -53,7 +52,7 @@ const categories = [
     id: 6,
     name: "Books",
     description: "Curated collection of tech literature and coffee table books",
-    image: "/categories/books.jpg",
+    image: "/images/coffee-1.jpg",
     itemCount: 14,
     featured: false,
     slug: "books"

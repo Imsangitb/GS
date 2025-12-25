@@ -5,6 +5,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useCart } from '../context/CartContext';
+import PageHeader from '../components/PageHeader';
+import NewsletterSection from '../components/NewsletterSection';
 
 // Import the default export (products array)
 import products from '../data/products';
@@ -170,197 +172,211 @@ export default function ShopPage() {
   };
   
   return (
-    <main className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8 text-center">Shop Our Collection</h1>
+    <>
+      <PageHeader
+        title="Shop Our Collection"
+        subtitle="Discover developer-focused fashion that combines functionality, style, and technology"
+        gradient={true}
+      />
       
-      {/* Filters Section */}
-      <div className="bg-white p-6 rounded-lg shadow-md mb-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Categories */}
-          <div>
-            <h2 className="font-semibold mb-3">Categories</h2>
-            <div className="flex flex-wrap gap-2">
-              {categories.map(category => (
-                <button
-                  key={category}
-                  onClick={() => handleCategoryChange(category)}
-                  className={`px-4 py-2 rounded-full text-sm ${
-                    activeCategory === category 
-                      ? 'bg-black text-white' 
-                      : 'bg-gray-200 hover:bg-gray-300'
-                  }`}
-                >
-                  {category.charAt(0).toUpperCase() + category.slice(1)}
-                </button>
-              ))}
-            </div>
-          </div>
-          
-          {/* Sort Options */}
-          <div>
-            <h2 className="font-semibold mb-3">Sort By</h2>
-            <select 
-              className="w-full p-2 border rounded-md bg-white"
-              value={sortOrder}
-              onChange={handleSortChange}
-            >
-              <option value="default">Featured</option>
-              <option value="best-selling">Best Selling</option>
-              <option value="price-low-high">Price: Low to High</option>
-              <option value="price-high-low">Price: High to Low</option>
-              <option value="newest">Newest</option>
-            </select>
-          </div>
-          
-          {/* Price Range */}
-          <div>
-            <h2 className="font-semibold mb-3">Price Range</h2>
-            <div className="flex items-center gap-4">
-              <div className="flex items-center">
-                <span className="mr-2">$</span>
-                <input 
-                  type="number" 
-                  min="0" 
-                  max={priceRange.max} 
-                  value={priceRange.min}
-                  onChange={(e) => handlePriceChange(e, 'min')}
-                  className="w-20 p-2 border rounded-md"
-                />
-              </div>
-              <span>to</span>
-              <div className="flex items-center">
-                <span className="mr-2">$</span>
-                <input 
-                  type="number" 
-                  min={priceRange.min} 
-                  value={priceRange.max}
-                  onChange={(e) => handlePriceChange(e, 'max')}
-                  className="w-20 p-2 border rounded-md"
-                />
+      <main className="container mx-auto px-4 py-8">
+        {/* Filters Section */}
+        <div className="bg-white p-6 rounded-lg shadow-md mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Categories */}
+            <div>
+              <h2 className="font-semibold mb-3">Categories</h2>
+              <div className="flex flex-wrap gap-2">
+                {categories.map(category => (
+                  <button
+                    key={category}
+                    onClick={() => handleCategoryChange(category)}
+                    className={`px-4 py-2 rounded-full text-sm ${
+                      activeCategory === category 
+                        ? 'bg-black text-white' 
+                        : 'bg-gray-200 hover:bg-gray-300'
+                    }`}
+                  >
+                    {category.charAt(0).toUpperCase() + category.slice(1)}
+                  </button>
+                ))}
               </div>
             </div>
-          </div>
-        </div>
-      </div>
-      
-      {/* Products Grid */}
-      {filteredProducts.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredProducts.map(product => (
-            <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition relative group">
-              {/* IMPROVED Product Labels - CONSISTENT STYLE */}
-              <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
-                {product.isNew && (
-                  <div className="bg-black bg-opacity-70 text-white text-xs font-medium px-3 py-1 rounded">
-                    NEW
-                  </div>
-                )}
-                {product.isBestSeller && (
-                  <div className="bg-black bg-opacity-70 text-white text-xs font-medium px-3 py-1 rounded">
-                    BEST SELLER
-                  </div>
-                )}
-                {product.isSale && (
-                  <div className="bg-black bg-opacity-70 text-white text-xs font-medium px-3 py-1 rounded">
-                    SALE {product.discountPercentage}% OFF
-                  </div>
-                )}
-              </div>
-              
-              <Link href={`/shop/products/${product.id}`} className="block">
-                <div className="aspect-square relative bg-gray-100 overflow-hidden">
-                  <Image 
-                    src={product.images[0]} 
-                    alt={product.name}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-300"
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+            
+            {/* Sort Options */}
+            <div>
+              <h2 className="font-semibold mb-3">Sort By</h2>
+              <select 
+                className="w-full p-2 border rounded-md bg-white"
+                value={sortOrder}
+                onChange={handleSortChange}
+              >
+                <option value="default">Featured</option>
+                <option value="best-selling">Best Selling</option>
+                <option value="price-low-high">Price: Low to High</option>
+                <option value="price-high-low">Price: High to Low</option>
+                <option value="newest">Newest</option>
+              </select>
+            </div>
+            
+            {/* Price Range */}
+            <div>
+              <h2 className="font-semibold mb-3">Price Range</h2>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center">
+                  <span className="mr-2">$</span>
+                  <input 
+                    type="number" 
+                    min="0" 
+                    max={priceRange.max} 
+                    value={priceRange.min}
+                    onChange={(e) => handlePriceChange(e, 'min')}
+                    className="w-20 p-2 border rounded-md"
                   />
                 </div>
-              </Link>
-              <div className="p-5">
-                <Link href={`/shop/products/${product.id}`} className="block">
-                  <h3 className="font-semibold text-lg mb-2 line-clamp-1">{product.name}</h3>
-                  {product.isSale ? (
-                    <div className="flex items-center gap-3 mb-2">
-                      <p className="text-gray-400 line-through text-sm">{formatPrice(product.price)}</p>
-                      <p className="text-red-600 font-medium">
-                        {formatPrice(calculateSalePrice(product.price, product.discountPercentage || 0))}
-                      </p>
-                    </div>
-                  ) : (
-                    <p className="text-gray-700 mb-2 font-medium">{formatPrice(product.price)}</p>
-                  )}
-                </Link>
-                
-                {/* Improved Stock indicator */}
-                <div className="border-t border-gray-100 pt-3 mb-3">
-                  <p className={`text-sm flex items-center ${product.inStock ? 'text-green-600' : 'text-red-600'}`}>
-                    <span className={`inline-block w-2 h-2 rounded-full mr-2 ${product.inStock ? 'bg-green-600' : 'bg-red-600'}`}></span>
-                    {product.inStock ? 'In Stock' : 'Out of Stock'}
-                  </p>
-                </div>
-                
-                <div className="flex flex-col gap-2">
-                  <Link 
-                    href={`/shop/products/${product.id}`}
-                    className="text-sm text-gray-600 hover:text-black transition mb-1 inline-block"
-                  >
-                    View Details
-                  </Link>
-                  
-                  {/* Softer, more stylish Add to Cart Button with hover effects */}
-                  {product.inStock && (
-                    <button 
-                      onClick={() => handleAddToCart(product)}
-                      onMouseEnter={() => setHoveredButton(product.id)}
-                      onMouseLeave={() => setHoveredButton(null)}
-                      className={`flex items-center justify-center py-2 px-4 rounded-md text-sm transition-all duration-300 ${
-                        addedProduct === product.id 
-                          ? 'bg-green-500 text-white' 
-                          : hoveredButton === product.id
-                            ? 'bg-gray-800 text-white' 
-                            : 'bg-gray-100 text-gray-800 hover:bg-gray-800 hover:text-white'
-                      }`}
-                      aria-label={`Add ${product.name} to cart`}
-                    >
-                      {addedProduct === product.id ? (
-                        <>
-                          <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                          Added to Cart
-                        </>
-                      ) : (
-                        <>
-                          <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                          </svg>
-                          Add to Cart
-                        </>
-                      )}
-                    </button>
-                  )}
+                <span>to</span>
+                <div className="flex items-center">
+                  <span className="mr-2">$</span>
+                  <input 
+                    type="number" 
+                    min={priceRange.min} 
+                    value={priceRange.max}
+                    onChange={(e) => handlePriceChange(e, 'max')}
+                    className="w-20 p-2 border rounded-md"
+                  />
                 </div>
               </div>
             </div>
-          ))}
+          </div>
         </div>
-      ) : (
-        <div className="text-center py-12">
-          <p className="text-xl text-gray-600">No products found matching your criteria.</p>
-          <button 
-            onClick={() => {
-              setActiveCategory('all');
-              setPriceRange({ min: 0, max: 1000 });
-              setSortOrder('default');
-            }}
-            className="mt-4 bg-black text-white px-6 py-2 rounded-md hover:bg-gray-800 transition"
-          >
-            Reset Filters
-          </button>
-        </div>
-      )}
-    </main>
+        
+        {/* Products Grid */}
+        {filteredProducts.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {filteredProducts.map(product => (
+              <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition relative group">
+                {/* IMPROVED Product Labels - CONSISTENT STYLE */}
+                <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
+                  {product.isNew && (
+                    <div className="bg-black bg-opacity-70 text-white text-xs font-medium px-3 py-1 rounded">
+                      NEW
+                    </div>
+                  )}
+                  {product.isBestSeller && (
+                    <div className="bg-black bg-opacity-70 text-white text-xs font-medium px-3 py-1 rounded">
+                      BEST SELLER
+                    </div>
+                  )}
+                  {product.isSale && (
+                    <div className="bg-black bg-opacity-70 text-white text-xs font-medium px-3 py-1 rounded">
+                      SALE {product.discountPercentage}% OFF
+                    </div>
+                  )}
+                </div>
+                
+                <Link href={`/shop/products/${product.id}`} className="block">
+                  <div className="aspect-square relative bg-gray-100 overflow-hidden">
+                    <Image 
+                      src={product.images[0]} 
+                      alt={product.name}
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-300"
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                    />
+                  </div>
+                </Link>
+                <div className="p-5">
+                  <Link href={`/shop/products/${product.id}`} className="block">
+                    <h3 className="font-semibold text-lg mb-2 line-clamp-1">{product.name}</h3>
+                    {product.isSale ? (
+                      <div className="flex items-center gap-3 mb-2">
+                        <p className="text-gray-400 line-through text-sm">{formatPrice(product.price)}</p>
+                        <p className="text-red-600 font-medium">
+                          {formatPrice(calculateSalePrice(product.price, product.discountPercentage || 0))}
+                        </p>
+                      </div>
+                    ) : (
+                      <p className="text-gray-700 mb-2 font-medium">{formatPrice(product.price)}</p>
+                    )}
+                  </Link>
+                  
+                  {/* Improved Stock indicator */}
+                  <div className="border-t border-gray-100 pt-3 mb-3">
+                    <p className={`text-sm flex items-center ${product.inStock ? 'text-green-600' : 'text-red-600'}`}>
+                      <span className={`inline-block w-2 h-2 rounded-full mr-2 ${product.inStock ? 'bg-green-600' : 'bg-red-600'}`}></span>
+                      {product.inStock ? 'In Stock' : 'Out of Stock'}
+                    </p>
+                  </div>
+                  
+                  <div className="flex flex-col gap-2">
+                    <Link 
+                      href={`/shop/products/${product.id}`}
+                      className="text-sm text-gray-600 hover:text-black transition mb-1 inline-block"
+                    >
+                      View Details
+                    </Link>
+                    
+                    {/* Softer, more stylish Add to Cart Button with hover effects */}
+                    {product.inStock && (
+                      <button 
+                        onClick={() => handleAddToCart(product)}
+                        onMouseEnter={() => setHoveredButton(product.id)}
+                        onMouseLeave={() => setHoveredButton(null)}
+                        className={`flex items-center justify-center py-2 px-4 rounded-md text-sm transition-all duration-300 ${
+                          addedProduct === product.id 
+                            ? 'bg-green-500 text-white' 
+                            : hoveredButton === product.id
+                              ? 'bg-gray-800 text-white' 
+                              : 'bg-gray-100 text-gray-800 hover:bg-gray-800 hover:text-white'
+                        }`}
+                        aria-label={`Add ${product.name} to cart`}
+                      >
+                        {addedProduct === product.id ? (
+                          <>
+                            <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                            Added to Cart
+                          </>
+                        ) : (
+                          <>
+                            <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
+                            Add to Cart
+                          </>
+                        )}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <p className="text-xl text-gray-600">No products found matching your criteria.</p>
+            <button 
+              onClick={() => {
+                setActiveCategory('all');
+                setPriceRange({ min: 0, max: 1000 });
+                setSortOrder('default');
+              }}
+              className="mt-4 bg-black text-white px-6 py-2 rounded-md hover:bg-gray-800 transition"
+            >
+              Reset Filters
+            </button>
+          </div>
+        )}
+      </main>
+      
+      <NewsletterSection 
+        title="Join Our Developer Community"
+        subtitle="Subscribe for product releases, coding resources, and exclusive offers"
+        buttonText="Subscribe"
+        placeholderText="Enter your email"
+        promoText="Get 15% off your first tech purchase when you subscribe!"
+      />
+    </>
   );
 }

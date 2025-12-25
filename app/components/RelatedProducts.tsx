@@ -5,14 +5,10 @@ import Link from 'next/link';
 import Image from 'next/image';
 
 interface RelatedProductsProps {
-  productIds: number[];
   products: any[];
 }
 
-const RelatedProducts: FC<RelatedProductsProps> = ({ productIds, products }) => {
-  // Filter products to only show those in the related products list
-  const relatedProducts = products.filter(product => productIds.includes(product.id));
-
+const RelatedProducts: FC<RelatedProductsProps> = ({ products }) => {
   // Function to determine the color based on sustainability score
   const getScoreColor = (score: number) => {
     if (score >= 80) return 'bg-green-100 text-green-800';
@@ -23,7 +19,7 @@ const RelatedProducts: FC<RelatedProductsProps> = ({ productIds, products }) => 
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-      {relatedProducts.map(product => (
+      {products.map(product => (
         <Link 
           href={`/shop/products/${product.id}`} 
           key={product.id}

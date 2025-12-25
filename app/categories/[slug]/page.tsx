@@ -55,8 +55,8 @@ interface CategoryPageProps {
   };
 }
 
-const CategoryPage: FC<CategoryPageProps> = ({ params }) => {
-  const { slug } = params;
+const CategoryPage: FC<CategoryPageProps> = async ({ params }) => {
+  const { slug } = await Promise.resolve(params);
   
   // Find the category based on slug
   const category = categories.find(cat => cat.slug.toLowerCase() === slug.toLowerCase());
@@ -65,8 +65,7 @@ const CategoryPage: FC<CategoryPageProps> = ({ params }) => {
   if (!category) {
     notFound();
   }
-  
-  // Get products for this category using the real product data
+    // Get products for this category using the real product data
   const products = productsData.filter(product => 
     product.category.toLowerCase() === slug.toLowerCase()
   );

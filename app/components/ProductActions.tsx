@@ -1,16 +1,15 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { useCart } from '../context/CartContext';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-interface Color {
+interface ColorItem {
   name: string;
   value: string;
   code: string;
 }
 
-interface Size {
+interface SizeItem {
   name: string;
   code: string;
   inStock: boolean;
@@ -18,28 +17,45 @@ interface Size {
 
 interface ProductActionsProps {
   product: any;
-  colors: Color[];
-  sizes: Size[];
+  selectedColor: string | null;
+  selectedSize: string | null;
+  quantity: number;
+  onColorChange: (color: string) => void;
+  onSizeChange: (size: string) => void;
+  onQuantityChange: (qty: number) => void;
+  onAddToCart: () => void;
 }
 
-const ProductActions = ({ product, colors, sizes }: ProductActionsProps) => {
-  const { addToCart } = useCart();
-  const [selectedColor, setSelectedColor] = useState<string>(colors[0]?.code || '');
-  const [selectedSize, setSelectedSize] = useState<string>(sizes.find(size => size.inStock)?.code || '');
-  const [quantity, setQuantity] = useState(1);
+const ProductActions = ({ 
+  product, 
+  selectedColor, 
+  selectedSize, 
+  quantity,
+  onColorChange,
+  onSizeChange,
+  onQuantityChange,
+  onAddToCart
+}: ProductActionsProps) => {
   const [addedToCart, setAddedToCart] = useState(false);
   const [showSizeGuide, setShowSizeGuide] = useState(false);
   
+  const colors: ColorItem[] = product.colors ? product.colors.map((color: string) => ({
+    name: color,
+    value: color.toLowerCase(),
+    code: color
+  })) : [];
+  
+  const sizes: SizeItem[] = product.sizes ? product.sizes.map((size: string) => ({
+    name: size,
+    code: size,
+    inStock: true
+  })) : [];
+
   // Find the selected color object
-  const selectedColorObj = colors.find(color => color.code === selectedColor);
+  const selectedColorObj = colors.find((color: ColorItem) => color.code === selectedColor);
 
   const handleAddToCart = () => {
-    addToCart({
-      ...product,
-      selectedColor,
-      selectedSize,
-      quantity
-    });
+    onAddToCart();
     
     setAddedToCart(true);
     setTimeout(() => {
@@ -48,12 +64,12 @@ const ProductActions = ({ product, colors, sizes }: ProductActionsProps) => {
   };
 
   const incrementQuantity = () => {
-    setQuantity(prev => prev + 1);
+    onQuantityChange(quantity + 1);
   };
 
   const decrementQuantity = () => {
     if (quantity > 1) {
-      setQuantity(prev => prev - 1);
+      onQuantityChange(quantity - 1);
     }
   };
 
@@ -69,10 +85,10 @@ const ProductActions = ({ product, colors, sizes }: ProductActionsProps) => {
             )}
           </div>
           <div className="flex flex-wrap gap-3">
-            {colors.map((color) => (
+            {colors.map((color: ColorItem) => (
               <button
                 key={color.code}
-                onClick={() => setSelectedColor(color.code)}
+                onClick={() => onColorChange(color.code)}
                 className={`relative rounded-full w-9 h-9 border transition-all duration-200 ${
                   selectedColor === color.code
                     ? 'ring-2 ring-teal-500 ring-offset-2 scale-110'
@@ -138,24 +154,24 @@ const ProductActions = ({ product, colors, sizes }: ProductActionsProps) => {
                     </thead>
                     <tbody>
                       <tr className="border-b border-gray-200">
-                        <td className="px-3 py-2">13 inch</td>
+                        <td className="px-3 py-2">Small</td>
                         <td className="px-3 py-2">35 x 25 cm</td>
-                        <td className="px-3 py-2">MacBook Air/Pro 13"</td>
+                        <td className="px-3 py-2">Standard</td>
                       </tr>
                       <tr className="border-b border-gray-200">
-                        <td className="px-3 py-2">14 inch</td>
+                        <td className="px-3 py-2">Medium</td>
                         <td className="px-3 py-2">37 x 26 cm</td>
-                        <td className="px-3 py-2">Dell XPS 13/14</td>
+                        <td className="px-3 py-2">Medium</td>
                       </tr>
                       <tr className="border-b border-gray-200">
-                        <td className="px-3 py-2">15 inch</td>
+                        <td className="px-3 py-2">Large</td>
                         <td className="px-3 py-2">39 x 28 cm</td>
-                        <td className="px-3 py-2">MacBook Pro 15"</td>
+                        <td className="px-3 py-2">Large</td>
                       </tr>
                       <tr>
-                        <td className="px-3 py-2">16 inch</td>
+                        <td className="px-3 py-2">X-Large</td>
                         <td className="px-3 py-2">41 x 30 cm</td>
-                        <td className="px-3 py-2">MacBook Pro 16"</td>
+                        <td className="px-3 py-2">Extra Large</td>
                       </tr>
                     </tbody>
                   </table>
@@ -165,7 +181,7 @@ const ProductActions = ({ product, colors, sizes }: ProductActionsProps) => {
           </AnimatePresence>
           
           <div className="grid grid-cols-4 gap-3">
-            {sizes.map((size) => (
+            {sizes.map((size: SizeItem) => (
               <button
                 key={size.code}
                 type="button"
@@ -178,7 +194,7 @@ const ProductActions = ({ product, colors, sizes }: ProductActionsProps) => {
                 }`}
                 onClick={() => {
                   if (size.inStock) {
-                    setSelectedSize(size.code);
+                    onSizeChange(size.code);
                   }
                 }}
                 disabled={!size.inStock}
@@ -195,21 +211,10 @@ const ProductActions = ({ product, colors, sizes }: ProductActionsProps) => {
           
           {/* Stock Status */}
           <div className="mt-2 flex items-center text-sm">
-            {sizes.find(size => size.code === selectedSize)?.inStock ? (
-              <>
-                <svg className="h-4 w-4 text-green-500 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                <span className="text-green-700">In stock and ready to ship</span>
-              </>
-            ) : (
-              <>
-                <svg className="h-4 w-4 text-red-500 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-                <span className="text-red-700">Selected size out of stock</span>
-              </>
-            )}
+            <svg className="h-4 w-4 text-green-500 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+            <span className="text-green-700">In stock and ready to ship</span>
           </div>
         </div>
       )}
@@ -273,16 +278,6 @@ const ProductActions = ({ product, colors, sizes }: ProductActionsProps) => {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
           </svg>
           Add to Cart
-        </button>
-        
-        <button 
-          type="button"
-          className="p-3 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
-          aria-label="Add to wishlist"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-          </svg>
         </button>
       </div>
       

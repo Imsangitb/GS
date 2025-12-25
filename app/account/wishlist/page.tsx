@@ -1,270 +1,283 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/app/context/AuthContext';
+import { useAuth } from '../../context/AuthContext';
+import { useCart } from '../../context/CartContext';
 import Link from 'next/link';
 import Image from 'next/image';
-import { createSupabaseClient } from '@/app/lib/supabase';
+import PageHeader from '@/app/components/PageHeader';
+import FloatingBackButton from '@/app/components/FloatingBackButton';
 
-interface WishlistItem {
+type WishlistItem = {
   id: string;
-  user_id: string;
-  product_id: number;
+  product_id: string;
   added_at: string;
-  product: {
-    id: number;
+  products: {
     name: string;
     price: number;
-    image: string;
-    sustainability_score?: number;
+    description: string;
+    images: string[];
   };
-}
+};
 
 export default function WishlistPage() {
   const { user } = useAuth();
+  const { addToCart } = useCart();
   const router = useRouter();
   const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
-  const supabase = createSupabaseClient();
-
   useEffect(() => {
     if (!user) {
-      router.push('/auth/signin');
+      router.push('/auth/signin?redirect=/account/wishlist');
       return;
     }
 
     async function fetchWishlist() {
-      setIsLoading(true);
-      
       try {
-        const { data, error } = await supabase
-          .from('wishlist')
-          .select(`
-            id, 
-            user_id, 
-            product_id, 
-            added_at,
-            product:products (
-              id, 
-              name, 
-              price, 
-              image,
-              sustainability_score
-            )
-          `)
-          .eq('user_id', user?.id)
-          .order('added_at', { ascending: false });
-          
-        if (error) {
-          setError('Failed to fetch wishlist: ' + error.message);
-          return;
+        setIsLoading(true);
+        const response = await fetch('/api/wishlist');
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch wishlist');
         }
-
-        // Convert data to the correct format - handling product as an array
-        const formattedData = data?.map(item => {
-          // Extract the first item from the product array if it exists
-          const productData = Array.isArray(item.product) && item.product.length > 0 
-            ? item.product[0] 
-            : { id: 0, name: 'Unknown Product', price: 0, image: '/placeholder.jpg', sustainability_score: 0 };
-            
-          return {
-            id: item.id,
-            user_id: item.user_id,
-            product_id: item.product_id,
-            added_at: item.added_at,
-            product: {
-              id: productData.id,
-              name: productData.name,
-              price: productData.price,
-              image: productData.image,
-              sustainability_score: productData.sustainability_score
-            }
-          };
-        }) || [];
         
-        setWishlistItems(formattedData);
-        
-      } catch (err) {
-        console.error('Error in wishlist fetch:', err);
-        setError('An unexpected error occurred.');
+        const data = await response.json();
+        setWishlistItems(data.wishlistItems || []);
+      } catch (error: any) {
+        console.error('Error fetching wishlist:', error);
+        setError(error.message);
       } finally {
         setIsLoading(false);
       }
     }
     
     fetchWishlist();
-  }, [user, router, supabase]);
+  }, [user, router]);
 
-  const removeFromWishlist = async (wishlistItemId: string) => {
+  const removeFromWishlist = async (wishlistItemId: string, productId: string) => {
     try {
-      const { error } = await supabase
-        .from('wishlist')
-        .delete()
-        .eq('id', wishlistItemId);
-        
-      if (error) {
-        setError('Failed to remove item: ' + error.message);
-        return;
+      const response = await fetch(`/api/wishlist?productId=${productId}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to remove item');
       }
       
       // Update the local state to reflect removal
-      setWishlistItems(wishlistItems.filter(item => item.id !== wishlistItemId));
-      
-    } catch (err) {
-      console.error('Error removing from wishlist:', err);
-      setError('An unexpected error occurred.');
+      setWishlistItems(prevItems => prevItems.filter(item => item.id !== wishlistItemId));
+    } catch (error: any) {
+      console.error('Error removing from wishlist:', error);
+      setError(error.message);
     }
   };
-  
+
+  const handleAddToCart = (item: WishlistItem) => {
+    const product = {
+      id: item.product_id,
+      name: item.products.name,
+      price: item.products.price,
+      images: item.products.images,
+    };
+    
+    addToCart(product);
+  };
+
+  const formatDate = (dateString: string): string => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex justify-center">
-            <svg className="animate-spin h-10 w-10 text-teal-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
+      <>
+        <PageHeader
+          title="Your Wishlist"
+          subtitle="Save and track products for later"
+          gradient={true}
+        />
+        <div className="container mx-auto px-4 py-12 max-w-6xl">
+          <div className="flex justify-center items-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-black"></div>
           </div>
         </div>
-      </div>
+      </>
+    );
+  }
+
+  if (error) {
+    return (
+      <>
+        <PageHeader
+          title="Your Wishlist"
+          subtitle="Save and track products for later"
+          gradient={true}
+        />
+        <div className="container mx-auto px-4 py-12 max-w-6xl">
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+            <p>There was an error loading your wishlist: {error}</p>
+            <p className="mt-2">Please try refreshing the page.</p>
+          </div>
+        </div>
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Your Wishlist</h1>
-          <Link 
-            href="/account" 
-            className="text-teal-600 hover:text-teal-700 font-medium flex items-center"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M7.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l2.293 2.293a1 1 0 010 1.414z" clipRule="evenodd" />
-            </svg>
-            Back to Account
-          </Link>
-        </div>
-        
-        {error && (
-          <div className="mb-6 bg-red-50 border-l-4 border-red-500 p-4">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <p className="text-sm text-red-700">{error}</p>
-              </div>
-            </div>
-          </div>
-        )}
-        
+    <>
+      <PageHeader
+        title="Your Wishlist"
+        subtitle="Save and track products for later"
+        gradient={true}
+      />
+      <FloatingBackButton href="/account" />
+      
+      <div className="container mx-auto px-4 py-12 max-w-6xl">
         {wishlistItems.length === 0 ? (
-          <div className="bg-white shadow rounded-lg p-8 text-center">
-            <svg xmlns="http://www.w3.org/2000/svg" className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-            </svg>
-            <h3 className="mt-2 text-lg font-medium text-gray-900">Your wishlist is empty</h3>
-            <p className="mt-1 text-gray-500">Browse our catalog and add items to your wishlist.</p>
-            <div className="mt-6">
-              <Link
-                href="/shop"
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
-              >
-                Explore Products
+          <div className="bg-white rounded-lg shadow p-6 text-center">
+            <div className="py-8">
+              <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+              </svg>
+              <h2 className="text-xl font-medium mb-2">Your wishlist is empty</h2>
+              <p className="text-gray-600 mb-6">Save items you love to your wishlist and come back to them later</p>
+              <Link href="/shop" className="inline-block bg-black hover:bg-gray-800 text-white py-2 px-6 rounded-md transition-colors">
+                Browse Products
               </Link>
             </div>
           </div>
         ) : (
-          <div className="bg-white shadow rounded-lg overflow-hidden">
-            <ul className="divide-y divide-gray-200">
-              {wishlistItems.map((item) => (
-                <li key={item.id} className="flex py-6 px-4 sm:px-6">
-                  <div className="flex-shrink-0 w-24 h-24 relative rounded-md overflow-hidden border border-gray-200">
-                    <Image
-                      src={item.product.image || '/placeholder.jpg'}
-                      alt={item.product.name}
-                      layout="fill"
-                      objectFit="cover"
-                    />
+          <>
+            <div className="bg-gray-50 p-6 rounded-lg mb-8 border border-gray-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-semibold mb-1">Developer Insights</h2>
+                  <p className="text-gray-600">Tech specs for your saved items</p>
+                </div>
+                <Link href="#" className="text-sm font-medium text-black flex items-center">
+                  View All Insights
+                  <svg className="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </Link>
+              </div>
+              
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                <div className="bg-white p-3 rounded-lg border border-gray-200">
+                  <p className="text-gray-600 text-xs mb-1">Most Common</p>
+                  <p className="font-medium">Sustainable Materials</p>
+                </div>
+                <div className="bg-white p-3 rounded-lg border border-gray-200">
+                  <p className="text-gray-600 text-xs mb-1">Average Price</p>
+                  <p className="font-medium">$49.99</p>
+                </div>
+                <div className="bg-white p-3 rounded-lg border border-gray-200">
+                  <p className="text-gray-600 text-xs mb-1">Tech Category</p>
+                  <p className="font-medium">Productivity</p>
+                </div>
+                <div className="bg-white p-3 rounded-lg border border-gray-200">
+                  <p className="text-gray-600 text-xs mb-1">Sustainability</p>
+                  <p className="font-medium">4.2/5.0</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {wishlistItems.map(item => (
+                <div key={item.id} className="bg-white rounded-lg shadow overflow-hidden group hover:shadow-md transition-shadow">
+                  <div className="relative h-64 w-full">
+                    <Link href={`/shop/products/${item.product_id}`}>
+                      <Image
+                        src={item.products.images[0] || '/placeholder.jpg'}
+                        alt={item.products.name}
+                        fill
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        className="object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    </Link>
+                    <div className="absolute top-2 right-2">
+                      <button 
+                        onClick={() => removeFromWishlist(item.id, item.product_id)}
+                        className="bg-white rounded-full p-1.5 shadow hover:bg-gray-100 transition-colors"
+                        aria-label="Remove from wishlist"
+                      >
+                        <svg className="w-5 h-5 text-black" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                          <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"></path>
+                        </svg>
+                      </button>
+                    </div>
                   </div>
                   
-                  <div className="ml-4 flex-1 flex flex-col">
-                    <div className="flex justify-between">
-                      <div>
-                        <h4 className="text-lg font-medium text-gray-900">
-                          <Link href={`/shop/products/${item.product_id}`} className="hover:text-teal-600">
-                            {item.product.name}
-                          </Link>
-                        </h4>
-                        
-                        {item.product.sustainability_score && (
-                          <div className="mt-1 flex items-center">
-                            <span className="text-xs font-medium mr-2">Sustainability:</span>
-                            <div className="bg-gray-200 h-2 rounded-full w-24 overflow-hidden">
-                              <div 
-                                className={`h-full ${
-                                  item.product.sustainability_score >= 80 ? 'bg-green-500' : 
-                                  item.product.sustainability_score >= 60 ? 'bg-teal-500' :
-                                  item.product.sustainability_score >= 40 ? 'bg-yellow-500' : 'bg-red-500'
-                                }`}
-                                style={{ width: `${item.product.sustainability_score}%` }}
-                              ></div>
-                            </div>
-                            <span className="ml-1 text-xs font-medium">{item.product.sustainability_score}%</span>
-                          </div>
-                        )}
-                      </div>
-                      
-                      <p className="text-lg font-medium text-gray-900">${item.product.price.toFixed(2)}</p>
+                  <div className="p-4">
+                    <Link href={`/shop/products/${item.product_id}`} className="block">
+                      <h2 className="text-lg font-medium hover:text-gray-700 transition-colors">{item.products.name}</h2>
+                    </Link>
+                    <p className="text-gray-600 mb-4 text-sm line-clamp-1">{item.products.description}</p>
+                    
+                    <div className="flex items-center justify-between mb-4">
+                      <span className="font-semibold">${item.products.price.toFixed(2)}</span>
+                      <span className="text-sm text-gray-500">Added {formatDate(item.added_at)}</span>
                     </div>
                     
-                    <div className="flex-1"></div>
+                    <button 
+                      onClick={() => handleAddToCart(item)}
+                      className="w-full bg-black hover:bg-gray-800 text-white py-2 px-4 rounded text-sm transition-colors"
+                    >
+                      Add to Cart
+                    </button>
                     
-                    <div className="flex justify-between text-sm mt-2">
-                      <p className="text-gray-500">
-                        Added on {new Date(item.added_at).toLocaleDateString()}
-                      </p>
-                      
-                      <div className="flex">
-                        <button
-                          type="button"
-                          onClick={() => removeFromWishlist(item.id)}
-                          className="font-medium text-red-600 hover:text-red-500 mr-4"
-                        >
-                          Remove
-                        </button>
-                        
-                        <Link 
-                          href={`/shop/products/${item.product_id}`}
-                          className="font-medium text-teal-600 hover:text-teal-500"
-                        >
-                          View Details
-                        </Link>
-                      </div>
+                    <div className="mt-3 flex items-center justify-between text-xs text-gray-500">
+                      <span className="flex items-center">
+                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        In Stock
+                      </span>
+                      <Link href={`/shop/products/${item.product_id}`} className="underline">
+                        View Details
+                      </Link>
                     </div>
                   </div>
-                </li>
+                </div>
               ))}
-            </ul>
-            
-            <div className="border-t border-gray-200 px-4 py-5 sm:px-6">
-              <Link 
-                href="/shop" 
-                className="text-teal-600 hover:text-teal-700 font-medium"
-              >
-                Continue Shopping
-              </Link>
+            </div>
+          </>
+        )}
+        
+        {wishlistItems.length > 0 && (
+          <div className="mt-8">
+            <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
+              <h2 className="text-lg font-semibold mb-4">Developer Recommendations</h2>
+              <p className="text-gray-600 mb-4">Based on your wishlist items, you might be interested in these developer tools:</p>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                <div className="p-4 border border-gray-200 rounded-lg bg-white hover:shadow-sm transition-shadow">
+                  <h3 className="font-medium mb-1">Code Editor Extension Pack</h3>
+                  <p className="text-sm text-gray-600 mb-2">Boost your productivity with our curated development tools.</p>
+                  <Link href="#" className="text-sm font-medium text-black">Learn More</Link>
+                </div>
+                <div className="p-4 border border-gray-200 rounded-lg bg-white hover:shadow-sm transition-shadow">
+                  <h3 className="font-medium mb-1">Sustainable Tech Newsletter</h3>
+                  <p className="text-sm text-gray-600 mb-2">Weekly insights on eco-friendly technology innovations.</p>
+                  <Link href="#" className="text-sm font-medium text-black">Subscribe</Link>
+                </div>
+                <div className="p-4 border border-gray-200 rounded-lg bg-white hover:shadow-sm transition-shadow">
+                  <h3 className="font-medium mb-1">API Access</h3>
+                  <p className="text-sm text-gray-600 mb-2">Get developer access to our product data and sustainability metrics.</p>
+                  <Link href="#" className="text-sm font-medium text-black">Request Access</Link>
+                </div>
+              </div>
             </div>
           </div>
         )}
       </div>
-    </div>
+    </>
   );
 }

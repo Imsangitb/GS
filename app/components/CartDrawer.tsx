@@ -3,10 +3,11 @@
 import { useCart } from '../context/CartContext';
 import Image from 'next/image';
 import { useEffect, useRef } from 'react';
+import Link from 'next/link';
 
 const CartDrawer = () => {
   const { 
-    cartItems, 
+    cart,
     isCartOpen, 
     toggleCart, 
     removeFromCart, 
@@ -15,12 +16,6 @@ const CartDrawer = () => {
   
   const drawerRef = useRef<HTMLDivElement>(null);
   
-  // Calculate total
-  const total = cartItems.reduce(
-    (sum, item) => sum + item.price * item.quantity, 
-    0
-  );
-
   // Handle click outside to close drawer
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -84,7 +79,7 @@ const CartDrawer = () => {
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="px-6 py-6 border-b border-gray-200 flex justify-between items-center">
-            <h2 className="text-xl font-semibold">Your Cart {cartItems.length > 0 && `(${cartItems.length})`}</h2>
+            <h2 className="text-xl font-semibold">Your Cart {cart.items.length > 0 && `(${cart.totalItems})`}</h2>
             <button 
               onClick={toggleCart}
               className="text-gray-500 hover:text-gray-700 transition-colors p-2 rounded-full hover:bg-gray-100"
@@ -98,7 +93,7 @@ const CartDrawer = () => {
           
           {/* Cart items */}
           <div className="flex-1 overflow-y-auto p-6">
-            {cartItems.length === 0 ? (
+            {cart.items.length === 0 ? (
               <div className="text-center py-16 animate-fadeIn" style={{ animation: 'fadeIn 0.5s forwards' }}>
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
@@ -113,16 +108,16 @@ const CartDrawer = () => {
               </div>
             ) : (
               <ul className="divide-y divide-gray-200">
-                {cartItems.map((item, index) => (
+                {cart.items.map((item, index) => (
                   <li 
-                    key={item.id} 
+                    key={`${item.product.id}-${item.color || ''}-${item.size || ''}`}
                     className="py-6 flex animate-fadeSlideIn" 
                     style={{ animation: `fadeSlideIn 0.5s ${index * 0.1}s forwards` }}
                   >
                     <div className="h-24 w-24 flex-shrink-0 overflow-hidden rounded-md border border-gray-200 relative">
                       <Image
-                        src={item.image}
-                        alt={item.name}
+                        src={item.product.images[0] || '/placeholder.jpg'}
+                        alt={item.product.name}
                         fill
                         sizes="96px"
                         className="object-cover object-center"
@@ -132,16 +127,29 @@ const CartDrawer = () => {
                     <div className="ml-6 flex flex-1 flex-col">
                       <div>
                         <div className="flex justify-between text-base font-medium text-gray-900">
-                          <h3>{item.name}</h3>
-                          <p className="ml-4">${(item.price * item.quantity).toFixed(2)}</p>
+                          <h3 className="pr-2">
+                            <Link href={`/shop/products/${item.product.id}`} className="hover:text-teal-600">
+                              {item.product.name}
+                            </Link>
+                          </h3>
+                          <p className="ml-4 whitespace-nowrap">
+                            ${(item.product.price * item.quantity).toFixed(2)}
+                          </p>
                         </div>
-                        <p className="mt-1 text-sm text-gray-500">${item.price.toFixed(2)} each</p>
+                        {/* Display variants if they exist */}
+                        {(item.color || item.size) && (
+                          <div className="mt-1 text-sm text-gray-500">
+                            {item.color && <span className="mr-2">Color: {item.color}</span>}
+                            {item.size && <span>Size: {item.size}</span>}
+                          </div>
+                        )}
+                        <p className="mt-1 text-sm text-gray-500">${item.product.price.toFixed(2)} each</p>
                       </div>
                       
                       <div className="flex flex-1 items-end justify-between text-sm">
                         <div className="flex items-center border rounded overflow-hidden">
                           <button 
-                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                            onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
                             className="px-3 py-1 text-gray-600 hover:text-gray-800 hover:bg-gray-100 transition-colors"
                             aria-label="Decrease quantity"
                           >
@@ -149,7 +157,7 @@ const CartDrawer = () => {
                           </button>
                           <span className="px-3 py-1 min-w-[30px] text-center">{item.quantity}</span>
                           <button 
-                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                            onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
                             className="px-3 py-1 text-gray-600 hover:text-gray-800 hover:bg-gray-100 transition-colors"
                             aria-label="Increase quantity"
                           >
@@ -159,7 +167,7 @@ const CartDrawer = () => {
 
                         <button
                           type="button"
-                          onClick={() => removeFromCart(item.id)}
+                          onClick={() => removeFromCart(item.product.id)}
                           className="font-medium text-red-600 hover:text-red-500 transition-colors group flex items-center"
                         >
                           <span className="group-hover:underline">Remove</span>
@@ -176,20 +184,29 @@ const CartDrawer = () => {
           </div>
           
           {/* Footer */}
-          {cartItems.length > 0 && (
+          {cart.items.length > 0 && (
             <div className="border-t border-gray-200 p-6 animate-slideUp" style={{ animation: 'slideUp 0.4s forwards' }}>
               <div className="flex justify-between text-base font-medium text-gray-900 mb-4">
                 <p>Subtotal</p>
-                <p className="text-xl">${total.toFixed(2)}</p>
+                <p className="text-xl">${cart.subtotal.toFixed(2)}</p>
               </div>
               <p className="text-sm text-gray-500 mb-6">
                 Shipping and taxes calculated at checkout.
               </p>
-              <button
-                className="w-full bg-teal-600 text-white py-3 px-4 rounded-md hover:bg-teal-700 transition-all transform hover:scale-105 shadow-md"
-              >
-                Checkout
-              </button>
+              <Link href="/cart" onClick={toggleCart}>
+                <button
+                  className="w-full bg-teal-600 text-white py-3 px-4 rounded-md hover:bg-teal-700 transition-all transform hover:scale-105 shadow-md"
+                >
+                  View Cart
+                </button>
+              </Link>
+              <Link href="/checkout" onClick={toggleCart}>
+                <button
+                  className="w-full mt-3 bg-black text-white py-3 px-4 rounded-md hover:bg-gray-800 transition-all transform hover:scale-105 shadow-md"
+                >
+                  Checkout
+                </button>
+              </Link>
               <div className="mt-6 text-center">
                 <button
                   type="button"
